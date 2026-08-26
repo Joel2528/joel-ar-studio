@@ -3,61 +3,150 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="refresh" content="0;url=examples/image-tracking/brand-ar.html" />
     <title>Joel's AR Studio — WebAR Platform</title>
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+      :root {
+        --bg-dark: #090d16;
+        --card-bg: #131b2e;
+        --border-color: #1e293b;
+        --accent-blue: #2563eb;
+        --accent-blue-hover: #1d4ed8;
+        --text-primary: #f8fafc;
+        --text-muted: #94a3b8;
+      }
+      * {
+        box-sizing: border-box;
+      }
       body {
         margin: 0;
         padding: 0;
         min-height: 100vh;
-        background: #0f172a;
-        color: #f8fafc;
-        font-family: 'Inter', sans-serif;
+        background: var(--bg-dark);
+        color: var(--text-primary);
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         display: flex;
         align-items: center;
         justify-content: center;
+        padding: 20px;
+        -webkit-font-smoothing: antialiased;
+      }
+      .portal-card {
+        background: var(--card-bg);
+        padding: 44px 36px;
+        border-radius: 28px;
+        border: 1px solid var(--border-color);
+        max-width: 480px;
+        width: 100%;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
         text-align: center;
       }
-      .card {
-        background: #1e293b;
-        padding: 40px;
-        border-radius: 24px;
-        border: 1px solid #334155;
-        max-width: 480px;
-        width: 90%;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(37, 99, 235, 0.15);
+        color: #60a5fa;
+        border: 1px solid rgba(37, 99, 235, 0.35);
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+        margin-bottom: 20px;
       }
-      h1 { font-size: 24px; margin-bottom: 12px; }
-      p { color: #94a3b8; font-size: 14px; margin-bottom: 28px; }
-      .btn {
-        display: block;
-        width: 100%;
-        padding: 14px;
-        margin-bottom: 12px;
-        border-radius: 12px;
-        background: #2563eb;
-        color: #ffffff;
+      .status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #10b981;
+        box-shadow: 0 0 8px #10b981;
+      }
+      h1 {
+        font-size: 26px;
+        font-weight: 800;
+        margin: 0 0 10px 0;
+        letter-spacing: -0.5px;
+      }
+      p {
+        color: var(--text-muted);
+        font-size: 14px;
+        margin: 0 0 32px 0;
+        line-height: 1.5;
+      }
+      .action-list {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .btn-portal {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        border-radius: 16px;
         text-decoration: none;
         font-weight: 700;
         font-size: 14px;
-        transition: all 0.2s ease;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid transparent;
       }
-      .btn:hover { background: #1d4ed8; }
-      .btn-secondary { background: #334155; color: #f8fafc; }
-      .btn-secondary:hover { background: #475569; }
+      .btn-primary-portal {
+        background: var(--accent-blue);
+        color: #ffffff;
+        box-shadow: 0 8px 24px rgba(37, 99, 235, 0.35);
+      }
+      .btn-primary-portal:hover {
+        background: var(--accent-blue-hover);
+        transform: translateY(-2px);
+      }
+      .btn-secondary-portal {
+        background: #1e293b;
+        color: #f8fafc;
+        border-color: #334155;
+      }
+      .btn-secondary-portal:hover {
+        background: #334155;
+        transform: translateY(-2px);
+      }
+      .footer-note {
+        margin-top: 32px;
+        font-size: 12px;
+        color: #64748b;
+      }
     </style>
   </head>
   <body>
-    <div class="card">
-      <h1>⚡ Joel's AR Studio</h1>
-      <p>Redirecting to WebAR Scanner App...</p>
-      <a href="examples/image-tracking/brand-ar.html" class="btn">Launch WebAR Scanner</a>
-      <a href="examples/image-tracking/admin.html" class="btn btn-secondary">Open Admin Dashboard</a>
-      <a href="examples/image-tracking/compile.html" class="btn btn-secondary">Target Photo Compiler</a>
+    <div class="portal-card">
+      <div class="badge">
+        <span class="status-dot"></span> Enterprise WebAR System
+      </div>
+
+      <h1>Joel's AR Studio</h1>
+      <p>Select an application portal below to launch WebAR Scanner, Admin Dashboard, or Target Compiler.</p>
+
+      <div class="action-list">
+        <a href="examples/image-tracking/brand-ar.html" class="btn-portal btn-primary-portal">
+          <span>📷 Launch WebAR Camera Scanner</span>
+          <span>→</span>
+        </a>
+
+        <a href="examples/image-tracking/admin.html" class="btn-portal btn-secondary-portal">
+          <span>📊 Open Enterprise Admin Dashboard</span>
+          <span>→</span>
+        </a>
+
+        <a href="examples/image-tracking/compile.html" class="btn-portal btn-secondary-portal">
+          <span>🛠️ Target Photo Compiler Tool</span>
+          <span>→</span>
+        </a>
+      </div>
+
+      <div class="footer-note">
+        Engineered by Joel kumar.J • Single Contributor Edition
+      </div>
     </div>
   </body>
 </html>
