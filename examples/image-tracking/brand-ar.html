@@ -221,7 +221,10 @@
 
         const sceneEl = document.querySelector("a-scene");
         
-        async function fetchSignedVideoUrl(frameId = 'F001') {
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentFrameId = urlParams.get('frame') || 'F001';
+        
+        async function fetchSignedVideoUrl(frameId = currentFrameId) {
           try {
             const res = await fetch(`http://localhost:3000/api/frames/${frameId}/video`);
             const data = await res.json();
@@ -249,10 +252,10 @@
 
         // Target Found Event — HIDE ALL UI/INSTRUCTIONS for clean video view
         arTarget?.addEventListener("targetFound", async () => {
-          console.log("MindAR Recognized Photo Target F001!");
+          console.log(`MindAR Recognized Photo Target ${currentFrameId}!`);
           document.body.classList.add("target-recognized");
 
-          const signedUrl = await fetchSignedVideoUrl('F001');
+          const signedUrl = await fetchSignedVideoUrl(currentFrameId);
           if (signedUrl || videoEl.src) {
             videoEl.currentTime = 0;
             videoEl.play().then(() => {
