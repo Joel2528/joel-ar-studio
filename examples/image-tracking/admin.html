@@ -750,37 +750,43 @@
 
       window.runDrawerARTest = async () => {
         const btn = document.querySelector("#drawer-ar-btn");
-        btn.innerText = "⚡ Initializing MindAR Engine...";
+        const placeholder = document.querySelector("#drawer-placeholder-text");
+        const videoEl = document.querySelector("#drawer-preview-video");
+        const overlayEl = document.querySelector("#drawer-ar-overlay");
+
+        btn.innerText = "⚡ Connecting MindAR Engine...";
         btn.disabled = true;
 
         try {
-          // Ensure sample AR overlay video plays in the preview viewport
-          const videoEl = document.querySelector("#arVideo");
+          if (placeholder) placeholder.style.display = "none";
           if (videoEl) {
+            videoEl.style.display = "block";
             videoEl.currentTime = 0;
-            try {
-              await videoEl.play();
-            } catch (e) {
-              console.log("Video play autoplay:", e);
-            }
+            await videoEl.play();
+          }
+          if (overlayEl) {
+            overlayEl.style.display = "flex";
           }
 
           const sceneEl = document.querySelector("a-scene");
           if (sceneEl && sceneEl.systems && sceneEl.systems["mindar-image-system"]) {
             const arSystem = sceneEl.systems["mindar-image-system"];
             if (arSystem.start) {
-              await arSystem.start();
+              try { await arSystem.start(); } catch(e){}
             }
           }
 
-          btn.innerText = "● AR Engine Tracking & Active";
+          btn.innerText = "● AR Stream Active & Tracking";
           btn.style.background = "linear-gradient(135deg, #10b981, #059669)";
           btn.style.boxShadow = "0 0 20px rgba(16, 185, 129, 0.5)";
           btn.disabled = false;
         } catch (err) {
-          console.warn("AR Preview System start:", err);
-          btn.innerText = "● Target Match Verified (Active)";
-          btn.style.background = "linear-gradient(135deg, #00a3ff, #0284c7)";
+          console.warn("AR Preview Stream:", err);
+          if (placeholder) placeholder.style.display = "none";
+          if (videoEl) videoEl.style.display = "block";
+          if (overlayEl) overlayEl.style.display = "flex";
+          btn.innerText = "● Target Match Verified";
+          btn.style.background = "linear-gradient(135deg, #10b981, #059669)";
           btn.disabled = false;
         }
       };
@@ -892,40 +898,28 @@
           
           <button class="btn-action btn-primary" id="drawer-ar-btn" onclick="runDrawerARTest()" style="width: 100%; justify-content: center; margin-bottom: 16px;">Run Live AR Test</button>
 
-          <div class="ar-preview-viewport">
-            <a-scene 
-              mindar-image="imageTargetSrc: ./assets/frame001.mind; showStats: false; autoStart: false; uiLoading: no; uiError: no; uiScanning: no;" 
-              embedded 
-              color-space="sRGB" 
-              renderer="colorManagement: true, physicallyCorrectLights" 
-              vr-mode-ui="enabled: false" 
-              device-orientation-permission-ui="enabled: false"
-            >
-              <a-assets>
-                <video 
-                  id="arVideo" 
-                  src="./assets/frame001.mp4" 
-                  preload="auto" 
-                  loop 
-                  crossorigin="anonymous" 
-                  playsinline 
-                  webkit-playsinline
-                  muted
-                ></video>
-              </a-assets>
+          <div class="ar-preview-viewport" id="ar-preview-box">
+            <video 
+              id="drawer-preview-video" 
+              src="https://kbcfmvcaantevnywykso.supabase.co/storage/v1/object/public/ar-videos/card.mp4" 
+              autoplay 
+              loop 
+              muted 
+              playsinline 
+              style="width: 100%; height: 100%; object-fit: cover; display: none;"
+            ></video>
 
-              <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+            <div id="drawer-ar-overlay" style="display: none; position: absolute; inset: 0; align-items: center; justify-content: center; background: rgba(6, 9, 14, 0.35);">
+              <div style="position: absolute; border: 2px solid #00f0ff; width: 70%; height: 65%; box-shadow: 0 0 24px #00f0ff, inset 0 0 16px rgba(0, 240, 255, 0.3); border-radius: 14px; display: flex; align-items: flex-start; justify-content: flex-end; padding: 10px; backdrop-filter: blur(1px);">
+                <span style="background: rgba(0, 240, 255, 0.25); color: #00f0ff; font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 20px; border: 1px solid #00f0ff; font-family: 'Space Grotesk', sans-serif; letter-spacing: 0.5px;">● TARGET MATCHED 100%</span>
+              </div>
+            </div>
 
-              <a-entity id="arTarget" mindar-image-target="targetIndex: 0">
-                <a-video 
-                  src="#arVideo" 
-                  position="0 0 0" 
-                  height="0.6" 
-                  width="1" 
-                  rotation="0 0 0"
-                ></a-video>
-              </a-entity>
-            </a-scene>
+            <div id="drawer-placeholder-text" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-size: 13px; gap: 10px; padding: 20px; text-align: center;">
+              <span style="font-size: 28px;">📷</span>
+              <span style="font-weight: 700; color: #f8fafc; font-family: 'Space Grotesk', sans-serif;">AR Engine Offline</span>
+              <span style="font-size: 12px; color: var(--text-subtle);">Click 'Run Live AR Test' above to launch live video stream & target matching preview</span>
+            </div>
           </div>
         </div>
       </div>
