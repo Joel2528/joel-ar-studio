@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Joel's AR Studio — Enterprise Admin Dashboard</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- A-Frame & MindAR -->
+    <script src="https://aframe.io/releases/1.4.1/aframe.min.js"></script>
+    <script src="../../src/image-target/aframe.js" type="module"></script>
+
+    <style>
+      :root {
+        --bg-page: #f8fafc;
+        --bg-sidebar: #0f172a;        /* Deep Dark Blue */
+        --sidebar-accent: #1e3a8a;     /* Royal Dark Blue */
+        --sidebar-hover: #1e293b;
+        --bg-card: #ffffff;           /* Pure White */
+        --bg-card-alt: #f1f5f9;       /* Light Slate */
+        --text-dark: #0f172a;         /* Dark Navy Text */
+        --text-subtle: #475569;       /* Slate Text */
+        --text-muted: #64748b;
+        --text-white: #ffffff;
+        --accent-blue: #2563eb;       /* Corporate Blue */
+        --accent-cyan: #0284c7;
+        --accent-emerald: #059669;    /* Status Active Green */
+        --accent-rose: #dc2626;       /* Status Disabled Red */
+        --border-subtle: #e2e8f0;
+        --shadow-card: 0 4px 20px rgba(15, 23, 42, 0.05);
+        --shadow-hover: 0 12px 28px rgba(37, 99, 235, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: var(--bg-page);
+        color: var(--text-dark);
+        display: flex;
+        min-height: 100vh;
+        overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* Sidebar Navigation */
+      .sidebar {
+        width: 260px;
+        background: var(--bg-sidebar);
+        padding: 28px 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        color: var(--text-white);
+        z-index: 10;
+      }
+
+      .sidebar-brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 18px;
+        font-weight: 700;
+        color: #ffffff;
+        padding-bottom: 24px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        letter-spacing: -0.3px;
+      }
+
+      .brand-badge {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: var(--accent-blue);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        font-weight: 800;
+        font-size: 14px;
+      }
+
+      .nav-menu {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-top: 24px;
+      }
+
+      .nav-link {
+        display: flex;
+        align-items: center;
+        padding: 12px 16px;
+        border-radius: 12px;
+        color: #94a3b8;
+        font-weight: 500;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .nav-link:hover {
+        background: var(--sidebar-hover);
+        color: #ffffff;
+      }
+
+      .nav-link.active {
+        background: var(--sidebar-accent);
+        color: #ffffff;
+      }
+
+      .sidebar-profile {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 14px 16px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--accent-blue);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: #ffffff;
+        font-size: 13px;
+      }
+
+      /* Main Viewport */
+      .main-viewport {
+        flex: 1;
+        padding: 36px 40px;
+        overflow-y: auto;
+      }
+
+      /* Top Header Toolbar */
+      .top-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 32px;
+      }
+
+      .search-bar {
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        padding: 10px 18px;
+        border-radius: 24px;
+        width: 380px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: var(--shadow-card);
+        transition: all 0.2s ease;
+      }
+
+      .search-bar input {
+        background: transparent;
+        border: none;
+        outline: none;
+        color: var(--text-dark);
+        font-size: 14px;
+        width: 100%;
+        font-family: inherit;
+      }
+
+      .search-bar input::placeholder {
+        color: var(--text-muted);
+      }
+
+      .search-bar:focus-within {
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+      }
+
+      .header-actions {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .btn-action {
+        padding: 10px 18px;
+        border-radius: 12px;
+        border: none;
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-family: inherit;
+      }
+
+      .btn-primary {
+        background: var(--accent-blue);
+        color: #ffffff;
+      }
+
+      .btn-primary:hover {
+        background: #1d4ed8;
+        transform: translateY(-1px);
+      }
+
+      .btn-secondary {
+        background: var(--bg-card);
+        color: var(--text-dark);
+        border: 1px solid var(--border-subtle);
+        box-shadow: var(--shadow-card);
+      }
+
+      .btn-secondary:hover {
+        background: var(--bg-card-alt);
+      }
+
+      /* KPI Cards Grid */
+      .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        margin-bottom: 32px;
+      }
+
+      .kpi-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        border-radius: 20px;
+        padding: 22px;
+        box-shadow: var(--shadow-card);
+        transition: all 0.25s ease;
+      }
+
+      .kpi-card:hover {
+        border-color: var(--accent-blue);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-hover);
+      }
+
+      .kpi-title {
+        color: var(--text-muted);
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+      }
+
+      .kpi-number {
+        font-size: 32px;
+        font-weight: 800;
+        color: var(--text-dark);
+        margin-top: 8px;
+        letter-spacing: -0.5px;
+      }
+
+      .kpi-subtext {
+        font-size: 12px;
+        color: var(--accent-emerald);
+        margin-top: 8px;
+        font-weight: 600;
+      }
+
+      /* Content Section Panels */
+      .content-grid {
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        gap: 24px;
+      }
+
+      .card-panel {
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        border-radius: 24px;
+        padding: 28px;
+        box-shadow: var(--shadow-card);
+      }
+
+      .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+      }
+
+      .panel-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text-dark);
+        letter-spacing: -0.3px;
+      }
+
+      /* Clean Data Table */
+      .corporate-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 8px;
+      }
+
+      .corporate-table th {
+        color: var(--text-muted);
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        padding: 10px 16px;
+        text-align: left;
+      }
+
+      .corporate-table td {
+        background: var(--bg-card-alt);
+        padding: 14px 16px;
+        font-size: 13px;
+        color: var(--text-dark);
+        transition: all 0.2s ease;
+      }
+
+      .corporate-table tr td:first-child {
+        border-top-left-radius: 12px;
+        border-bottom-left-radius: 12px;
+      }
+
+      .corporate-table tr td:last-child {
+        border-top-right-radius: 12px;
+        border-bottom-right-radius: 12px;
+      }
+
+      .corporate-table tr:hover td {
+        background: #e2e8f0;
+      }
+
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+      }
+
+      .status-active {
+        background: rgba(5, 150, 105, 0.1);
+        color: var(--accent-emerald);
+      }
+
+      .status-disabled {
+        background: rgba(220, 38, 38, 0.1);
+        color: var(--accent-rose);
+      }
+
+      /* Toggle Switch */
+      .switch {
+        position: relative;
+        display: inline-block;
+        width: 42px;
+        height: 22px;
+      }
+
+      .switch input { opacity: 0; width: 0; height: 0; }
+
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-color: #cbd5e1;
+        transition: .25s ease;
+        border-radius: 22px;
+      }
+
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 16px;
+        width: 16px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: .25s ease;
+        border-radius: 50%;
+      }
+
+      input:checked + .slider {
+        background-color: var(--accent-blue);
+      }
+
+      input:checked + .slider:before {
+        transform: translateX(20px);
+      }
+
+      /* AR Preview Viewport Drawer */
+      .ar-preview-viewport {
+        position: relative;
+        height: 360px;
+        border-radius: 20px;
+        overflow: hidden;
+        border: 1px solid var(--border-subtle);
+        background: #090d16;
+      }
+
+      /* Modal Popups */
+      .modal-overlay {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(6px);
+        z-index: 99999;
+        display: none;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .modal-box {
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        border-radius: 24px;
+        width: 90%;
+        max-width: 500px;
+        padding: 32px;
+        box-shadow: 0 20px 50px rgba(15, 23, 42, 0.25);
+      }
+
+      .form-field {
+        margin-bottom: 18px;
+      }
+
+      .form-label {
+        display: block;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text-subtle);
+        margin-bottom: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .form-control {
+        width: 100%;
+        padding: 12px 16px;
+        background: var(--bg-card-alt);
+        border: 1px solid var(--border-subtle);
+        border-radius: 12px;
+        color: var(--text-dark);
+        font-size: 14px;
+        font-family: inherit;
+      }
+
+      .form-control:focus {
+        outline: none;
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+      }
+    </style>
+
+    <script type="module">
+      async function fetchDashboard() {
+        try {
+          const res = await fetch('http://localhost:3000/api/admin/dashboard');
+          const data = await res.json();
+          renderDashboard(data);
+        } catch (err) {
+          console.error("Dashboard fetch error:", err);
+        }
+      }
+
+      function renderDashboard(data) {
+        document.querySelector("#client-count").innerText = data.clientsCount;
+        document.querySelector("#frame-count").innerText = data.framesCount;
+        document.querySelector("#active-count").innerText = data.activeFramesCount;
+        document.querySelector("#r2-name").innerText = data.supabaseConfig ? data.supabaseConfig.bucketName : 'ar-videos';
+
+        const tableBody = document.querySelector("#clients-table-body");
+        let html = '';
+
+        data.data.forEach(client => {
+          if (client.frames.length > 0) {
+            client.frames.forEach(frame => {
+              html += `
+                <tr>
+                  <td><strong>${client.name}</strong> <br/><span style="color: var(--text-muted); font-size: 11px;">${client.id}</span></td>
+                  <td><strong>${frame.name}</strong> <br/><span style="color: var(--accent-blue); font-size: 11px;">${frame.id}</span></td>
+                  <td style="font-family: monospace; color: var(--accent-blue); font-weight: 600;">${frame.video ? frame.video.storageKey : 'N/A'}</td>
+                  <td>
+                    <span class="status-pill ${frame.active ? 'status-active' : 'status-disabled'}">
+                      ${frame.active ? 'ACTIVE' : 'DISABLED'}
+                    </span>
+                  </td>
+                  <td>
+                    <label class="switch">
+                      <input type="checkbox" ${frame.active ? 'checked' : ''} onchange="toggleFrame('${frame.id}')">
+                      <span class="slider"></span>
+                    </label>
+                  </td>
+                </tr>
+              `;
+            });
+          } else {
+            html += `
+              <tr>
+                <td><strong>${client.name}</strong> <br/><span style="color: var(--text-muted); font-size: 11px;">${client.id}</span></td>
+                <td colspan="4" style="color: var(--text-muted);">No frame targets registered</td>
+              </tr>
+            `;
+          }
+        });
+
+        tableBody.innerHTML = html;
+      }
+
+      window.toggleFrame = async (frameId) => {
+        await fetch(`http://localhost:3000/api/admin/frames/${frameId}/toggle`, { method: 'POST' });
+        fetchDashboard();
+      };
+
+      window.openModal = (id) => document.querySelector(`#${id}`).style.display = 'flex';
+      window.closeModals = () => document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
+
+      window.submitNewClient = async () => {
+        const name = document.querySelector("#c-name").value;
+        const email = document.querySelector("#c-email").value;
+        await fetch('http://localhost:3000/api/admin/clients', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email })
+        });
+        closeModals();
+        fetchDashboard();
+      };
+
+      window.submitNewFrame = async () => {
+        const clientId = document.querySelector("#f-client").value;
+        const name = document.querySelector("#f-name").value;
+        const filename = document.querySelector("#f-video").value;
+        await fetch('http://localhost:3000/api/admin/frames', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ clientId, name, filename })
+        });
+        closeModals();
+        fetchDashboard();
+      };
+
+      window.runDrawerARTest = async () => {
+        const btn = document.querySelector("#drawer-ar-btn");
+        btn.innerText = "Connecting MindAR Engine...";
+
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.src = "./assets/joel-target.jpg";
+        await new Promise((r) => { img.onload = r; });
+
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width || 640;
+        canvas.height = img.height || 480;
+        const ctx = canvas.getContext("2d");
+
+        function animate() {
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          requestAnimationFrame(animate);
+        }
+        animate();
+
+        const stream = canvas.captureStream(30);
+        if (!navigator.mediaDevices) navigator.mediaDevices = {};
+        navigator.mediaDevices.getUserMedia = async () => stream;
+
+        const sceneEl = document.querySelector("a-scene");
+        const arSystem = sceneEl.systems["mindar-image-system"];
+        await arSystem.start();
+
+        btn.innerText = "Target Match Verified";
+      };
+
+      document.addEventListener("DOMContentLoaded", fetchDashboard);
+    </script>
+  </head>
+
+  <body>
+    <!-- Corporate Dark Blue Sidebar -->
+    <div class="sidebar">
+      <div>
+        <div class="sidebar-brand">
+          <div class="brand-badge">J</div>
+          Joel's AR Studio
+        </div>
+
+        <div class="nav-menu">
+          <div class="nav-link active">Dashboard Overview</div>
+          <div class="nav-link" onclick="openModal('add-client-modal')">Client Directory</div>
+          <div class="nav-link" onclick="openModal('add-frame-modal')">Frame Targets</div>
+          <div class="nav-link" onclick="openModal('r2-modal')">Supabase Storage</div>
+          <div class="nav-link" onclick="window.open('brand-ar.html', '_blank')">Launch Scanner</div>
+        </div>
+      </div>
+
+      <div class="sidebar-profile">
+        <div class="avatar">J</div>
+        <div>
+          <div style="font-weight: 700; font-size: 13px;">Joel kumar.J</div>
+          <div style="font-size: 11px; color: #94a3b8;">System Administrator</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Viewport -->
+    <div class="main-viewport">
+      <!-- Top Toolbar -->
+      <div class="top-toolbar">
+        <div class="search-bar">
+          <input type="text" placeholder="Search clients, targets, or storage keys..." />
+        </div>
+
+        <div class="header-actions">
+          <button class="btn-action btn-secondary" onclick="openModal('r2-modal')">Supabase Storage</button>
+          <button class="btn-action btn-primary" onclick="openModal('add-client-modal')">Add Client Account</button>
+        </div>
+      </div>
+
+      <!-- KPI Grid -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-title">Total Clients</div>
+          <div class="kpi-number" id="client-count">3</div>
+          <div class="kpi-subtext">Active Accounts</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-title">Registered Frames</div>
+          <div class="kpi-number" id="frame-count">3</div>
+          <div class="kpi-subtext">Configured Targets</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-title">Active AR Streams</div>
+          <div class="kpi-number" id="active-count" style="color: var(--accent-emerald);">2</div>
+          <div class="kpi-subtext">Token Validated</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-title">Supabase Storage Bucket</div>
+          <div class="kpi-number" id="r2-name" style="font-size: 22px; color: var(--accent-blue); margin-top: 10px;">ar-videos</div>
+          <div class="kpi-subtext">Zero Egress Storage</div>
+        </div>
+      </div>
+
+      <!-- Content Grid -->
+      <div class="content-grid">
+        <div class="card-panel">
+          <div class="panel-header">
+            <h2 class="panel-title">Client Accounts & Target Directory</h2>
+            <button class="btn-action btn-secondary" onclick="openModal('add-frame-modal')">Add Frame</button>
+          </div>
+
+          <table class="corporate-table">
+            <thead>
+              <tr>
+                <th>Client</th>
+                <th>Target Frame</th>
+                <th>R2 Storage Key</th>
+                <th>Status</th>
+                <th>Active Toggle</th>
+              </tr>
+            </thead>
+            <tbody id="clients-table-body">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Right Side Viewport Drawer -->
+        <div class="card-panel">
+          <div class="panel-header">
+            <h2 class="panel-title">Live AR Engine Preview</h2>
+          </div>
+
+          <p style="font-size: 13px; color: var(--text-subtle); margin-bottom: 16px;">Test MindAR feature matching and signed R2 video overlay directly inside admin panel:</p>
+          
+          <button class="btn-action btn-primary" id="drawer-ar-btn" onclick="runDrawerARTest()" style="width: 100%; justify-content: center; margin-bottom: 16px;">Run Live AR Test</button>
+
+          <div class="ar-preview-viewport">
+            <a-scene 
+              mindar-image="imageTargetSrc: ./assets/frame001.mind; showStats: false; autoStart: false; uiLoading: no; uiError: no; uiScanning: no;" 
+              embedded 
+              color-space="sRGB" 
+              renderer="colorManagement: true, physicallyCorrectLights" 
+              vr-mode-ui="enabled: false" 
+              device-orientation-permission-ui="enabled: false"
+            >
+              <a-assets>
+                <video 
+                  id="arVideo" 
+                  src="./assets/frame001.mp4" 
+                  preload="auto" 
+                  loop 
+                  crossorigin="anonymous" 
+                  playsinline 
+                  webkit-playsinline
+                  muted
+                ></video>
+              </a-assets>
+
+              <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+              <a-entity id="arTarget" mindar-image-target="targetIndex: 0">
+                <a-video 
+                  src="#arVideo" 
+                  position="0 0 0" 
+                  height="0.6" 
+                  width="1" 
+                  rotation="0 0 0"
+                ></a-video>
+              </a-entity>
+            </a-scene>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Client Modal -->
+    <div class="modal-overlay" id="add-client-modal">
+      <div class="modal-box">
+        <h2 style="margin-top: 0; color: var(--text-dark); font-size: 20px;">Add New Client Account</h2>
+        <div class="form-field">
+          <label class="form-label">Client Name</label>
+          <input type="text" id="c-name" class="form-control" placeholder="e.g. John Wedding Studio" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Email Address</label>
+          <input type="email" id="c-email" class="form-control" placeholder="john@example.com" />
+        </div>
+        <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+          <button class="btn-action btn-secondary" onclick="closeModals()">Cancel</button>
+          <button class="btn-action btn-primary" onclick="submitNewClient()">Create Account</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Frame Modal -->
+    <div class="modal-overlay" id="add-frame-modal">
+      <div class="modal-box">
+        <h2 style="margin-top: 0; color: var(--text-dark); font-size: 20px;">Add Target Frame</h2>
+        <div class="form-field">
+          <label class="form-label">Select Client</label>
+          <select id="f-client" class="form-control">
+            <option value="C001">C001 - John Wedding</option>
+            <option value="C002">C002 - Sarah Birthday</option>
+            <option value="C003">C003 - Kumar Memorial</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Target Frame Name</label>
+          <input type="text" id="f-name" class="form-control" placeholder="e.g. Wedding Reception Frame" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Cloudflare R2 Video Filename</label>
+          <input type="text" id="f-video" class="form-control" placeholder="reception_final.mp4" />
+        </div>
+        <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+          <button class="btn-action btn-secondary" onclick="closeModals()">Cancel</button>
+          <button class="btn-action btn-primary" onclick="submitNewFrame()">Register Target Frame</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cloudflare R2 Modal -->
+    <div class="modal-overlay" id="r2-modal">
+      <div class="modal-box">
+        <h2 style="margin-top: 0; color: var(--text-dark); font-size: 20px;">Cloudflare R2 Credentials</h2>
+        <div class="form-field">
+          <label class="form-label">R2 Bucket Name</label>
+          <input type="text" class="form-control" value="ar-videos" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Account ID</label>
+          <input type="text" class="form-control" value="8f7a932b1049281c0" />
+        </div>
+        <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+          <button class="btn-action btn-secondary" onclick="closeModals()">Cancel</button>
+          <button class="btn-action btn-primary" onclick="closeModals()">Save R2 Settings</button>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

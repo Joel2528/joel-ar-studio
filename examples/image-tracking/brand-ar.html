@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Joel's AR Studio — Scanner</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- A-Frame & MindAR -->
+    <script src="https://aframe.io/releases/1.4.1/aframe.min.js"></script>
+    <script src="../../src/image-target/aframe.js" type="module"></script>
+
+    <style>
+      :root {
+        --dark-navy: #050b14;
+        --midnight-blue: #0f172a;
+        --accent-blue: #2563eb;
+        --cyan-accent: #0284c7;
+        --text-light: #f8fafc;
+        --text-subtle: #94a3b8;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: var(--dark-navy);
+        color: var(--text-light);
+        -webkit-font-smoothing: antialiased;
+      }
+      .example-container {
+        overflow: hidden;
+        position: absolute;
+        width: 100%;
+        height: 100%;
+      }
+      
+      /* Top Corporate Navbar */
+      .top-navbar {
+        position: absolute;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 9999;
+        background: rgba(15, 23, 42, 0.85);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        padding: 10px 24px;
+        border-radius: 40px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4);
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        width: 90%;
+        max-width: 500px;
+        justify-content: space-between;
+      }
+      .brand-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: #ffffff;
+        letter-spacing: -0.2px;
+      }
+      .r2-live-tag {
+        background: rgba(37, 99, 235, 0.15);
+        color: #60a5fa;
+        border: 1px solid rgba(37, 99, 235, 0.35);
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .r2-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #10b981;
+        box-shadow: 0 0 8px #10b981;
+        animation: pulse 1.5s infinite;
+      }
+      @keyframes pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(1.2); }
+      }
+
+      /* Viewfinder HUD Overlay */
+      .hud-container {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 280px;
+        height: 280px;
+        pointer-events: none;
+        z-index: 999;
+      }
+      .corner {
+        position: absolute;
+        width: 32px;
+        height: 32px;
+        border-color: #38bdf8;
+        border-style: solid;
+      }
+      .corner-tl { top: 0; left: 0; border-width: 3px 0 0 3px; border-top-left-radius: 8px; }
+      .corner-tr { top: 0; right: 0; border-width: 3px 3px 0 0; border-top-right-radius: 8px; }
+      .corner-bl { bottom: 0; left: 0; border-width: 0 0 3px 3px; border-bottom-left-radius: 8px; }
+      .corner-br { bottom: 0; right: 0; border-width: 0 3px 3px 0; border-bottom-right-radius: 8px; }
+
+      .scan-line {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, #38bdf8, transparent);
+        box-shadow: 0 0 10px #38bdf8;
+        animation: scan 2.5s ease-in-out infinite;
+      }
+      @keyframes scan {
+        0% { top: 0; opacity: 0.8; }
+        50% { top: 98%; opacity: 1; }
+        100% { top: 0; opacity: 0.8; }
+      }
+
+      /* Bottom Status Banner */
+      .bottom-status-box {
+        position: absolute;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 9999;
+        background: rgba(15, 23, 42, 0.92);
+        backdrop-filter: blur(16px);
+        padding: 12px 24px;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: #ffffff;
+        text-align: center;
+        width: 90%;
+        max-width: 440px;
+        box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+        font-size: 13px;
+        font-weight: 500;
+      }
+
+      /* PC Camera Simulator Bar for testing without webcam */
+      .pc-sim-tray {
+        position: absolute;
+        bottom: 90px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 9999;
+        display: flex;
+        gap: 10px;
+      }
+      .btn-sim {
+        padding: 8px 18px;
+        background: var(--accent-blue);
+        color: #ffffff;
+        border: none;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 12px;
+        cursor: pointer;
+        font-family: inherit;
+        box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+        transition: all 0.2s ease;
+      }
+      .btn-sim:hover {
+        background: #1d4ed8;
+        transform: translateY(-1px);
+      }
+    </style>
+
+    <script type="module">
+      document.addEventListener("DOMContentLoaded", async () => {
+        const arTarget = document.querySelector("#arTarget");
+        const videoEl = document.querySelector("#arVideo");
+        const statusText = document.querySelector("#status-text");
+        const pcSimBtn = document.querySelector("#pc-sim-btn");
+        const hudScanner = document.querySelector("#hud-scanner");
+
+        const sceneEl = document.querySelector("a-scene");
+        
+        async function fetchSignedVideoUrl(frameId = 'F001') {
+          statusText.innerHTML = "Requesting Cloudflare R2 Signed Token...";
+          try {
+            const res = await fetch(`http://localhost:3000/api/frames/${frameId}/video`);
+            const data = await res.json();
+            if (data.success) {
+              videoEl.src = data.signedUrl;
+              statusText.innerHTML = `MindAR Scanning Active — ${data.frameName}`;
+              return data.signedUrl;
+            } else {
+              statusText.innerHTML = `Frame Status: ${data.error}`;
+              return null;
+            }
+          } catch (err) {
+            statusText.innerHTML = "Backend connection offline";
+            return null;
+          }
+        }
+
+        // Target Found Event
+        arTarget?.addEventListener("targetFound", async () => {
+          console.log("MindAR Recognized Photo Target F001!");
+          hudScanner.style.borderColor = "#10b981";
+          statusText.innerHTML = "Target Recognized! Playing video overlay...";
+          const signedUrl = await fetchSignedVideoUrl('F001');
+          if (signedUrl) {
+            videoEl.currentTime = 0;
+            videoEl.play().catch(e => console.log("Autoplay:", e));
+          }
+        });
+
+        // Target Lost Event
+        arTarget?.addEventListener("targetLost", () => {
+          hudScanner.style.borderColor = "#38bdf8";
+          statusText.innerHTML = "Point camera at your photograph target...";
+          videoEl.pause();
+        });
+
+        // Start MindAR Engine automatically if camera available
+        try {
+          const arSystem = sceneEl.systems["mindar-image-system"];
+          if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            arSystem.start().then(() => {
+              statusText.innerHTML = "Point camera at photograph target...";
+            }).catch(() => {
+              statusText.innerHTML = "PC Mode: Click below to run stream simulation";
+            });
+          }
+        } catch (e) {
+          console.log("Auto-start fallback");
+        }
+
+        // PC Virtual Camera Stream Simulator
+        pcSimBtn?.addEventListener("click", async () => {
+          pcSimBtn.innerText = "Initializing Virtual Stream...";
+          statusText.innerHTML = "Simulating live camera stream from target photo...";
+
+          const img = new Image();
+          img.crossOrigin = "anonymous";
+          img.src = "./assets/joel-target.jpg";
+          await new Promise((r) => { img.onload = r; });
+
+          const canvas = document.createElement("canvas");
+          canvas.width = img.width || 640;
+          canvas.height = img.height || 480;
+          const ctx = canvas.getContext("2d");
+
+          function animate() {
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            requestAnimationFrame(animate);
+          }
+          animate();
+
+          const stream = canvas.captureStream(30);
+          if (!navigator.mediaDevices) navigator.mediaDevices = {};
+          navigator.mediaDevices.getUserMedia = async () => stream;
+
+          const arSystem = sceneEl.systems["mindar-image-system"];
+          await arSystem.start();
+
+          pcSimBtn.innerText = "Stream Active & Scanning";
+        });
+      });
+    </script>
+  </head>
+
+  <body>
+    <!-- Top Corporate Navbar -->
+    <div class="top-navbar">
+      <div class="brand-title">
+        Joel's AR Studio
+      </div>
+      <div class="r2-live-tag">
+        <span class="r2-dot"></span> Supabase Cloud Active
+      </div>
+    </div>
+
+    <!-- Viewfinder HUD Frame -->
+    <div class="hud-container" id="hud-scanner">
+      <div class="corner corner-tl"></div>
+      <div class="corner corner-tr"></div>
+      <div class="corner corner-bl"></div>
+      <div class="corner corner-br"></div>
+      <div class="scan-line"></div>
+    </div>
+
+    <!-- PC Simulation Button -->
+    <div class="pc-sim-tray">
+      <button class="btn-sim" id="pc-sim-btn">Run PC Simulation Test</button>
+    </div>
+
+    <!-- Bottom Status Bar -->
+    <div class="bottom-status-box">
+      <span id="status-text">Point camera at photograph target...</span>
+    </div>
+
+    <div class="example-container">
+      <a-scene 
+        mindar-image="imageTargetSrc: ./assets/frame001.mind; showStats: false; autoStart: false; uiLoading: no; uiError: no; uiScanning: no;" 
+        embedded 
+        color-space="sRGB" 
+        renderer="colorManagement: true, physicallyCorrectLights" 
+        vr-mode-ui="enabled: false" 
+        device-orientation-permission-ui="enabled: false"
+      >
+        <a-assets>
+          <video 
+            id="arVideo" 
+            src="" 
+            preload="auto" 
+            loop 
+            crossorigin="anonymous" 
+            playsinline 
+            webkit-playsinline
+            muted
+          ></video>
+        </a-assets>
+
+        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+        <a-entity id="arTarget" mindar-image-target="targetIndex: 0">
+          <a-video 
+            src="#arVideo" 
+            position="0 0 0" 
+            height="0.6" 
+            width="1" 
+            rotation="0 0 0"
+          ></a-video>
+        </a-entity>
+      </a-scene>
+    </div>
+  </body>
+</html>
