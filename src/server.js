@@ -53,6 +53,23 @@ const server = http.createServer((req, res) => {
   const parsedUrl = new URL(req.url, `http://${req.headers.host}`);
   const pathname = parsedUrl.pathname;
 
+  // Root Health & System Status Endpoint
+  if (pathname === '/' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      status: 'online',
+      service: "Joel's AR Studio Backend API",
+      version: '1.0.0',
+      systemHealth: '100% Operational',
+      endpoints: {
+        adminDashboard: '/api/admin/dashboard',
+        scannerVideo: '/api/frames/F001/video',
+        storageDirectory: '/uploads/'
+      }
+    }));
+    return;
+  }
+
   // Serve static files from /uploads/ directory
   if (pathname.startsWith('/uploads/') && req.method === 'GET') {
     const relativePath = pathname.replace('/uploads/', '');
