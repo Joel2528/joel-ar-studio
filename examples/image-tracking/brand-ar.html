@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Joel's AR Studio — Scanner</title>
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,12 +18,11 @@
         --dark-navy: #050b14;
         --midnight-blue: #0f172a;
         --accent-blue: #2563eb;
-        --cyan-accent: #0284c7;
         --text-light: #f8fafc;
-        --text-subtle: #94a3b8;
       }
       * {
         box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
       }
       body {
         margin: 0;
@@ -33,6 +32,8 @@
         background: var(--dark-navy);
         color: var(--text-light);
         -webkit-font-smoothing: antialiased;
+        width: 100vw;
+        height: 100vh;
       }
       .example-container {
         overflow: hidden;
@@ -40,18 +41,32 @@
         width: 100%;
         height: 100%;
       }
+
+      /* UI Elements Transition Wrapper for Clean View on Target Match */
+      .scanner-ui-overlay {
+        opacity: 1;
+        visibility: visible;
+        transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.4s ease;
+        pointer-events: auto;
+      }
+
+      body.target-recognized .scanner-ui-overlay {
+        opacity: 0 !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+      }
       
       /* Top Corporate Navbar */
       .top-navbar {
         position: absolute;
-        top: 20px;
+        top: calc(16px + env(safe-area-inset-top));
         left: 50%;
         transform: translateX(-50%);
         z-index: 9999;
         background: rgba(15, 23, 42, 0.85);
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
-        padding: 10px 24px;
+        padding: 10px 20px;
         border-radius: 40px;
         border: 1px solid rgba(255, 255, 255, 0.15);
         box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4);
@@ -59,16 +74,16 @@
         align-items: center;
         gap: 16px;
         width: 90%;
-        max-width: 500px;
+        max-width: 460px;
         justify-content: space-between;
       }
       .brand-title {
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 700;
         color: #ffffff;
         letter-spacing: -0.2px;
       }
-      .r2-live-tag {
+      .engine-tag {
         background: rgba(37, 99, 235, 0.15);
         color: #60a5fa;
         border: 1px solid rgba(37, 99, 235, 0.35);
@@ -80,7 +95,7 @@
         align-items: center;
         gap: 6px;
       }
-      .r2-dot {
+      .status-dot {
         width: 6px;
         height: 6px;
         border-radius: 50%;
@@ -99,15 +114,15 @@
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        width: 280px;
-        height: 280px;
+        width: min(280px, 70vw);
+        height: min(280px, 70vw);
         pointer-events: none;
         z-index: 999;
       }
       .corner {
         position: absolute;
-        width: 32px;
-        height: 32px;
+        width: 28px;
+        height: 28px;
         border-color: #38bdf8;
         border-style: solid;
       }
@@ -135,28 +150,29 @@
       /* Bottom Status Banner */
       .bottom-status-box {
         position: absolute;
-        bottom: 30px;
+        bottom: calc(24px + env(safe-area-inset-bottom));
         left: 50%;
         transform: translateX(-50%);
         z-index: 9999;
         background: rgba(15, 23, 42, 0.92);
         backdrop-filter: blur(16px);
-        padding: 12px 24px;
+        -webkit-backdrop-filter: blur(16px);
+        padding: 12px 20px;
         border-radius: 20px;
         border: 1px solid rgba(255, 255, 255, 0.15);
         color: #ffffff;
         text-align: center;
         width: 90%;
-        max-width: 440px;
+        max-width: 420px;
         box-shadow: 0 12px 32px rgba(0,0,0,0.5);
         font-size: 13px;
         font-weight: 500;
       }
 
-      /* PC Camera Simulator Bar for testing without webcam */
+      /* PC Camera Simulator Bar */
       .pc-sim-tray {
         position: absolute;
-        bottom: 90px;
+        bottom: calc(76px + env(safe-area-inset-bottom));
         left: 50%;
         transform: translateX(-50%);
         z-index: 9999;
@@ -164,7 +180,7 @@
         gap: 10px;
       }
       .btn-sim {
-        padding: 8px 18px;
+        padding: 8px 16px;
         background: var(--accent-blue);
         color: #ffffff;
         border: none;
@@ -176,9 +192,22 @@
         box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
         transition: all 0.2s ease;
       }
-      .btn-sim:hover {
-        background: #1d4ed8;
-        transform: translateY(-1px);
+
+      /* Audio Unmute Overlay Badge for iOS Safari */
+      .audio-badge {
+        position: absolute;
+        top: calc(16px + env(safe-area-inset-top));
+        right: 16px;
+        z-index: 99999;
+        background: rgba(15, 23, 42, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        display: none;
+        backdrop-filter: blur(10px);
       }
     </style>
 
@@ -188,49 +217,62 @@
         const videoEl = document.querySelector("#arVideo");
         const statusText = document.querySelector("#status-text");
         const pcSimBtn = document.querySelector("#pc-sim-btn");
-        const hudScanner = document.querySelector("#hud-scanner");
+        const audioBadge = document.querySelector("#audio-badge");
 
         const sceneEl = document.querySelector("a-scene");
         
         async function fetchSignedVideoUrl(frameId = 'F001') {
-          statusText.innerHTML = "Requesting Cloudflare R2 Signed Token...";
           try {
             const res = await fetch(`http://localhost:3000/api/frames/${frameId}/video`);
             const data = await res.json();
             if (data.success) {
               videoEl.src = data.signedUrl;
-              statusText.innerHTML = `MindAR Scanning Active — ${data.frameName}`;
               return data.signedUrl;
-            } else {
-              statusText.innerHTML = `Frame Status: ${data.error}`;
-              return null;
             }
-          } catch (err) {
-            statusText.innerHTML = "Backend connection offline";
             return null;
+          } catch (err) {
+            // Local fallback
+            videoEl.src = "./assets/frame001.mp4";
+            return "./assets/frame001.mp4";
           }
         }
 
-        // Target Found Event
+        // Tap screen to unmute audio (iOS Safari Autoplay Policy Requirement)
+        function enableAudioOnTouch() {
+          if (videoEl) {
+            videoEl.muted = false;
+            if (audioBadge) audioBadge.style.display = 'none';
+          }
+        }
+        window.addEventListener("click", enableAudioOnTouch);
+        window.addEventListener("touchstart", enableAudioOnTouch);
+
+        // Target Found Event — HIDE ALL UI/INSTRUCTIONS for clean video view
         arTarget?.addEventListener("targetFound", async () => {
           console.log("MindAR Recognized Photo Target F001!");
-          hudScanner.style.borderColor = "#10b981";
-          statusText.innerHTML = "Target Recognized! Playing video overlay...";
+          document.body.classList.add("target-recognized");
+
           const signedUrl = await fetchSignedVideoUrl('F001');
-          if (signedUrl) {
+          if (signedUrl || videoEl.src) {
             videoEl.currentTime = 0;
-            videoEl.play().catch(e => console.log("Autoplay:", e));
+            videoEl.play().then(() => {
+              if (videoEl.muted && audioBadge) {
+                audioBadge.style.display = 'block';
+                audioBadge.innerText = "Tap Screen for Sound";
+              }
+            }).catch(e => console.log("Autoplay error:", e));
           }
         });
 
-        // Target Lost Event
+        // Target Lost Event — RESTORE UI/INSTRUCTIONS to guide user
         arTarget?.addEventListener("targetLost", () => {
-          hudScanner.style.borderColor = "#38bdf8";
-          statusText.innerHTML = "Point camera at your photograph target...";
+          document.body.classList.remove("target-recognized");
+          statusText.innerHTML = "Point camera at photograph target...";
           videoEl.pause();
+          if (audioBadge) audioBadge.style.display = 'none';
         });
 
-        // Start MindAR Engine automatically if camera available
+        // Start MindAR Engine automatically if camera available (iOS Safari & Android supported)
         try {
           const arSystem = sceneEl.systems["mindar-image-system"];
           if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
@@ -244,9 +286,9 @@
           console.log("Auto-start fallback");
         }
 
-        // PC Virtual Camera Stream Simulator
+        // PC Virtual Camera Stream Simulator (for PC testing without webcam)
         pcSimBtn?.addEventListener("click", async () => {
-          pcSimBtn.innerText = "Initializing Virtual Stream...";
+          pcSimBtn.innerText = "Initializing Stream...";
           statusText.innerHTML = "Simulating live camera stream from target photo...";
 
           const img = new Image();
@@ -272,42 +314,48 @@
           const arSystem = sceneEl.systems["mindar-image-system"];
           await arSystem.start();
 
-          pcSimBtn.innerText = "Stream Active & Scanning";
+          pcSimBtn.innerText = "Stream Active";
         });
       });
     </script>
   </head>
 
   <body>
-    <!-- Top Corporate Navbar -->
-    <div class="top-navbar">
-      <div class="brand-title">
-        Joel's AR Studio
+    <div class="audio-badge" id="audio-badge">Tap Screen for Sound</div>
+
+    <!-- UI Overlay Elements (Auto-Fades Out on Target Recognition for Clean Video View) -->
+    <div class="scanner-ui-overlay">
+      <!-- Top Corporate Navbar -->
+      <div class="top-navbar">
+        <div class="brand-title">
+          Joel's AR Studio
+        </div>
+        <div class="engine-tag">
+          <span class="status-dot"></span> WebAR Engine
+        </div>
       </div>
-      <div class="r2-live-tag">
-        <span class="r2-dot"></span> Supabase Cloud Active
+
+      <!-- Viewfinder HUD Frame -->
+      <div class="hud-container">
+        <div class="corner corner-tl"></div>
+        <div class="corner corner-tr"></div>
+        <div class="corner corner-bl"></div>
+        <div class="corner corner-br"></div>
+        <div class="scan-line"></div>
+      </div>
+
+      <!-- PC Simulation Button -->
+      <div class="pc-sim-tray">
+        <button class="btn-sim" id="pc-sim-btn">Run PC Simulation Test</button>
+      </div>
+
+      <!-- Bottom Status Bar -->
+      <div class="bottom-status-box">
+        <span id="status-text">Point camera at photograph target...</span>
       </div>
     </div>
 
-    <!-- Viewfinder HUD Frame -->
-    <div class="hud-container" id="hud-scanner">
-      <div class="corner corner-tl"></div>
-      <div class="corner corner-tr"></div>
-      <div class="corner corner-bl"></div>
-      <div class="corner corner-br"></div>
-      <div class="scan-line"></div>
-    </div>
-
-    <!-- PC Simulation Button -->
-    <div class="pc-sim-tray">
-      <button class="btn-sim" id="pc-sim-btn">Run PC Simulation Test</button>
-    </div>
-
-    <!-- Bottom Status Bar -->
-    <div class="bottom-status-box">
-      <span id="status-text">Point camera at photograph target...</span>
-    </div>
-
+    <!-- Fullscreen AR Scene Viewport (iOS Safari & Android Optimized) -->
     <div class="example-container">
       <a-scene 
         mindar-image="imageTargetSrc: ./assets/frame001.mind; showStats: false; autoStart: false; uiLoading: no; uiError: no; uiScanning: no;" 
