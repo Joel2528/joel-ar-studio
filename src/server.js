@@ -17,9 +17,9 @@ let storageConfig = {
 // In-Memory Database Store (Mirroring Relational Schema)
 const db = {
   clients: [
-    { id: 'C001', name: 'John Wedding', email: 'john@example.com', plan: 'Enterprise', createdAt: new Date().toISOString() },
-    { id: 'C002', name: 'Sarah Birthday', email: 'sarah@example.com', plan: 'Pro', createdAt: new Date().toISOString() },
-    { id: 'C003', name: 'Kumar Memorial', email: 'kumar@example.com', plan: 'Starter', createdAt: new Date().toISOString() }
+    { id: 'C001', name: "Joel's AR Studio (Primary)", email: 'joel@joelar.com', plan: 'Enterprise', createdAt: new Date().toISOString() },
+    { id: 'C002', name: "Sarah's Birthday Party", email: 'sarah@example.com', plan: 'Pro', createdAt: new Date().toISOString() },
+    { id: 'C003', name: "Kumar Memorial Event", email: 'kumar@example.com', plan: 'Starter', createdAt: new Date().toISOString() }
   ],
   frames: [
     { id: 'F001', clientId: 'C001', name: 'Wedding Main Frame', targetFile: 'frame001.mind', active: true, createdAt: new Date().toISOString() },

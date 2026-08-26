@@ -547,8 +547,8 @@
         data: [
           {
             id: 'C001',
-            name: "John's Wedding Studio",
-            email: 'john@example.com',
+            name: "Joel's AR Studio (Primary)",
+            email: 'joel@joelar.com',
             frames: [
               { id: 'F001', name: 'Wedding Ceremony Target', active: true, video: { storageKey: 'clients/C001/F001/video.mp4' } },
               { id: 'F002', name: 'Reception Gala Target', active: true, video: { storageKey: 'clients/C001/F002/video.mp4' } }
@@ -612,7 +612,7 @@
 
       function renderDashboard(data) {
         if (!data) return;
-        document.querySelector("#client-count").innerText = data.clientsCount || 3;
+        document.querySelector("#client-count").innerText = data.clientsCount || defaultDashboardData.data.length;
         document.querySelector("#frame-count").innerText = data.framesCount || 3;
         document.querySelector("#active-count").innerText = data.activeFramesCount || 2;
         document.querySelector("#r2-name").innerText = data.supabaseConfig ? data.supabaseConfig.bucketName : 'ar-videos';
@@ -666,28 +666,86 @@
       window.closeModals = () => document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
 
       window.submitNewClient = async () => {
-        const name = document.querySelector("#c-name").value;
-        const email = document.querySelector("#c-email").value;
-        await fetch(`${apiHost}/api/admin/clients`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email })
-        });
+        const nameInput = document.querySelector("#c-name");
+        const emailInput = document.querySelector("#c-email");
+        const name = nameInput.value.trim() || "Joel's AR Client";
+        const email = emailInput.value.trim() || 'client@joelar.com';
+
+        const newId = `C${String(defaultDashboardData.data.length + 1).padStart(3, '0')}`;
+        const newClient = {
+          id: newId,
+          name: name,
+          email: email,
+          frames: []
+        };
+
+        defaultDashboardData.data.push(newClient);
+        defaultDashboardData.clientsCount = defaultDashboardData.data.length;
+
+        const clientSelect = document.querySelector("#f-client");
+        if (clientSelect) {
+          const opt = document.createElement("option");
+          opt.value = newId;
+          opt.innerText = `${newId} - ${name}`;
+          clientSelect.appendChild(opt);
+          clientSelect.value = newId;
+        }
+
+        renderDashboard(defaultDashboardData);
         closeModals();
-        fetchDashboard();
+
+        nameInput.value = '';
+        emailInput.value = '';
+
+        try {
+          await fetch(`${apiHost}/api/admin/clients`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email })
+          });
+        } catch (e) {
+          console.warn("Client created locally:", e);
+        }
       };
 
       window.submitNewFrame = async () => {
         const clientId = document.querySelector("#f-client").value;
-        const name = document.querySelector("#f-name").value;
-        const filename = document.querySelector("#f-video").value;
-        await fetch(`${apiHost}/api/admin/frames`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ clientId, name, filename })
-        });
+        const nameInput = document.querySelector("#f-name");
+        const videoInput = document.querySelector("#f-video");
+        const name = nameInput.value.trim() || 'Custom AR Target Frame';
+        const filename = videoInput.value.trim() || 'video.mp4';
+
+        const newFrameId = `F${String(defaultDashboardData.framesCount + 1).padStart(3, '0')}`;
+        const newFrame = {
+          id: newFrameId,
+          name: name,
+          active: true,
+          video: { storageKey: `clients/${clientId}/${newFrameId}/${filename}` }
+        };
+
+        const clientObj = defaultDashboardData.data.find(c => c.id === clientId);
+        if (clientObj) {
+          clientObj.frames.push(newFrame);
+        }
+
+        defaultDashboardData.framesCount += 1;
+        defaultDashboardData.activeFramesCount += 1;
+
+        renderDashboard(defaultDashboardData);
         closeModals();
-        fetchDashboard();
+
+        nameInput.value = '';
+        videoInput.value = '';
+
+        try {
+          await fetch(`${apiHost}/api/admin/frames`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ clientId, name, filename })
+          });
+        } catch (e) {
+          console.warn("Frame created locally:", e);
+        }
       };
 
       window.runDrawerARTest = async () => {
@@ -873,11 +931,11 @@
         <h2 style="margin-top: 0; color: var(--text-dark); font-size: 20px;">Add New Client Account</h2>
         <div class="form-field">
           <label class="form-label">Client Name</label>
-          <input type="text" id="c-name" class="form-control" placeholder="e.g. John Wedding Studio" />
+          <input type="text" id="c-name" class="form-control" placeholder="e.g. Joel's AR Client Studio" />
         </div>
         <div class="form-field">
           <label class="form-label">Email Address</label>
-          <input type="email" id="c-email" class="form-control" placeholder="john@example.com" />
+          <input type="email" id="c-email" class="form-control" placeholder="joel@joelar.com" />
         </div>
         <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
           <button class="btn-action btn-secondary" onclick="closeModals()">Cancel</button>
@@ -893,7 +951,7 @@
         <div class="form-field">
           <label class="form-label">Select Client</label>
           <select id="f-client" class="form-control">
-            <option value="C001">C001 - John Wedding</option>
+            <option value="C001">C001 - Joel's AR Studio (Primary)</option>
             <option value="C002">C002 - Sarah Birthday</option>
             <option value="C003">C003 - Kumar Memorial</option>
           </select>
