@@ -464,6 +464,28 @@
     <script type="module">
       const apiHost = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://joel-ar-api.onrender.com';
 
+      document.addEventListener("DOMContentLoaded", () => {
+        const isAuth = sessionStorage.getItem("admin_auth");
+        if (isAuth === "true") {
+          document.querySelector("#auth-gate-modal").style.display = "none";
+          fetchDashboard();
+        } else {
+          document.querySelector("#auth-gate-modal").style.display = "flex";
+        }
+      });
+
+      window.verifyPasscode = () => {
+        const pass = document.querySelector("#auth-passcode").value;
+        const errEl = document.querySelector("#auth-error");
+        if (pass === "joel2026") {
+          sessionStorage.setItem("admin_auth", "true");
+          document.querySelector("#auth-gate-modal").style.display = "none";
+          fetchDashboard();
+        } else {
+          errEl.style.display = "block";
+        }
+      };
+
       async function fetchDashboard() {
         try {
           const res = await fetch(`${apiHost}/api/admin/dashboard`);
@@ -803,9 +825,24 @@
           </a>
         </div>
 
-        <div style="display: flex; gap: 12px; justify-content: flex-end;">
-          <button class="btn-action btn-secondary" onclick="closeModals()">Close</button>
+    <!-- Admin Auth Gate Modal -->
+    <div class="modal-overlay" id="auth-gate-modal" style="display: flex; z-index: 999999; background: #050b14;">
+      <div class="modal-box" style="max-width: 400px; text-align: center;">
+        <div style="font-size: 36px; margin-bottom: 12px;">🔒</div>
+        <h2 style="margin-top: 0; color: var(--text-dark); font-size: 20px;">Admin Access Protection</h2>
+        <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px; line-height: 1.5;">
+          This management dashboard is protected. Enter passcode to access database & compiler.
+        </p>
+
+        <div class="form-field">
+          <input type="password" id="auth-passcode" class="form-control" placeholder="Enter Admin Passcode" style="text-align: center; font-size: 16px; letter-spacing: 2px;" onkeyup="if(event.key==='Enter') verifyPasscode()" />
         </div>
+
+        <div id="auth-error" style="color: #ef4444; font-size: 12px; font-weight: 700; display: none; margin-bottom: 14px;">
+          ⚠️ Access Denied: Incorrect Passcode
+        </div>
+
+        <button class="btn-action btn-primary" onclick="verifyPasscode()" style="width: 100%; padding: 12px;">Unlock Admin Dashboard</button>
       </div>
     </div>
   </body>
