@@ -339,38 +339,6 @@
           videoEl.pause();
           if (audioBadge) audioBadge.style.display = 'none';
         });
-
-        // PC Virtual Camera Stream Simulator (for PC testing without webcam)
-        pcSimBtn?.addEventListener("click", async () => {
-          pcSimBtn.innerText = "Initializing Stream...";
-          statusText.innerHTML = "Simulating live camera stream from target photo...";
-
-          const img = new Image();
-          img.crossOrigin = "anonymous";
-          img.src = "./assets/joel-target.jpg";
-          await new Promise((r) => { img.onload = r; });
-
-          const canvas = document.createElement("canvas");
-          canvas.width = img.width || 640;
-          canvas.height = img.height || 480;
-          const ctx = canvas.getContext("2d");
-
-          function animate() {
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            requestAnimationFrame(animate);
-          }
-          animate();
-
-          const stream = canvas.captureStream(30);
-          if (!navigator.mediaDevices) navigator.mediaDevices = {};
-          navigator.mediaDevices.getUserMedia = async () => stream;
-
-          const arSystem = sceneEl.systems["mindar-image-system"];
-          await arSystem.start();
-
-          pcSimBtn.innerText = "Stream Active";
-          startCamBtn.style.display = "none";
-        });
       });
     </script>
   </head>
@@ -397,11 +365,6 @@
         <div class="corner corner-bl"></div>
         <div class="corner corner-br"></div>
         <div class="scan-line"></div>
-      </div>
-
-      <!-- PC Simulation Button -->
-      <div class="pc-sim-tray">
-        <button class="btn-sim" id="pc-sim-btn">PC Test Simulation</button>
       </div>
 
       <!-- Bottom Action & Status Bar -->

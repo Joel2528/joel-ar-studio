@@ -796,18 +796,25 @@
       </div>
     </div>
 
-    <!-- Cloudflare R2 Modal -->
+    <!-- Supabase Storage Modal -->
     <div class="modal-overlay" id="r2-modal">
       <div class="modal-box">
-        <h2 style="margin-top: 0; color: var(--text-dark); font-size: 20px;">Cloudflare R2 Credentials</h2>
+        <h2 style="margin-top: 0; color: var(--text-dark); font-size: 20px;">Supabase Storage Bucket</h2>
         <div class="form-field">
-          <label class="form-label">R2 Bucket Name</label>
+          <label class="form-label">Bucket Name</label>
           <input type="text" class="form-control" value="ar-videos" />
         </div>
         <div class="form-field">
-          <label class="form-label">Account ID</label>
-          <input type="text" class="form-control" value="8f7a932b1049281c0" />
+          <label class="form-label">Storage Region</label>
+          <input type="text" class="form-control" value="ap-southeast-1" />
         </div>
+        <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+          <button class="btn-action btn-secondary" onclick="closeModals()">Cancel</button>
+          <button class="btn-action btn-primary" onclick="closeModals()">Save Bucket Settings</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Target Photo Compiler Modal -->
     <div class="modal-overlay" id="compiler-modal">
       <div class="modal-box" style="max-width: 540px;">
@@ -824,6 +831,12 @@
             Open Interactive Target Compiler ↗
           </a>
         </div>
+
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+          <button class="btn-action btn-secondary" onclick="closeModals()">Cancel</button>
+        </div>
+      </div>
+    </div>
 
     <!-- Admin Auth Gate Modal -->
     <div class="modal-overlay" id="auth-gate-modal" style="display: flex; z-index: 999999; background: #050b14;">
