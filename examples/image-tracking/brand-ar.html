@@ -9,9 +9,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- A-Frame & MindAR -->
+    <!-- A-Frame & Production Standalone MindAR -->
     <script src="https://aframe.io/releases/1.4.1/aframe.min.js"></script>
-    <script src="../../src/image-target/aframe.js" type="module"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
     <style>
       :root {
@@ -247,6 +247,13 @@
 
         const sceneEl = document.querySelector("a-scene");
         
+        // Detect if link was opened inside WhatsApp / Instagram / Facebook in-app browser
+        const isInAppBrowser = /FBAN|FBAV|Instagram|WhatsApp|Line/i.test(navigator.userAgent);
+        if (isInAppBrowser) {
+          statusText.innerHTML = "⚠️ WhatsApp Browser detects camera block. Tap <strong>'...'</strong> at bottom right and choose <strong>'Open in Safari'</strong> or <strong>'Open in Chrome'</strong>.";
+          startCamBtn.innerText = "Open in Safari / Chrome Browser";
+        }
+
         async function fetchSignedVideoUrl(frameId = 'F001') {
           try {
             const apiHost = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://joel-ar-api.onrender.com';
@@ -275,19 +282,38 @@
 
         // Start Camera Function
         async function launchCamera() {
-          statusText.innerHTML = "Opening Camera Stream...";
+          if (isInAppBrowser) {
+            alert("Please tap the '...' button at the bottom right of your screen and select 'Open in Safari' or 'Open in Chrome' to allow camera access!");
+            return;
+          }
+
+          statusText.innerHTML = "Opening Mobile Camera Stream...";
           try {
+            // Request native media stream directly
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+              await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+            }
+
             const arSystem = sceneEl.systems["mindar-image-system"];
-            await arSystem.start();
-            statusText.innerHTML = "Point camera at photograph target...";
-            startCamBtn.style.display = "none";
+            if (arSystem) {
+              await arSystem.start();
+              statusText.innerHTML = "Point camera at photograph target...";
+              startCamBtn.style.display = "none";
+            }
           } catch (err) {
             console.error("Camera access error:", err);
-            statusText.innerHTML = "Camera permission needed. Click 'Start Camera Scanner' or run PC simulation.";
+            statusText.innerHTML = "Camera permission pending. Please tap 'Allow' when prompted by your browser.";
           }
         }
 
         startCamBtn?.addEventListener("click", launchCamera);
+
+        // Auto-start attempt on page load for native mobile browsers
+        if (!isInAppBrowser) {
+          setTimeout(() => {
+            launchCamera().catch(e => console.log("Auto launch:", e));
+          }, 300);
+        }
 
         // Target Found Event — HIDE ALL UI/INSTRUCTIONS for clean video view
         arTarget?.addEventListener("targetFound", async () => {
