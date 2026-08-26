@@ -622,6 +622,7 @@
         </div>
 
         <div class="header-actions">
+          <button class="btn-action btn-secondary" onclick="openModal('compiler-modal')">🛠️ Target Compiler</button>
           <button class="btn-action btn-secondary" onclick="openModal('r2-modal')">Supabase Storage</button>
           <button class="btn-action btn-primary" onclick="openModal('add-client-modal')">Add Client Account</button>
         </div>
@@ -785,9 +786,25 @@
           <label class="form-label">Account ID</label>
           <input type="text" class="form-control" value="8f7a932b1049281c0" />
         </div>
-        <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
-          <button class="btn-action btn-secondary" onclick="closeModals()">Cancel</button>
-          <button class="btn-action btn-primary" onclick="closeModals()">Save R2 Settings</button>
+    <!-- Target Photo Compiler Modal -->
+    <div class="modal-overlay" id="compiler-modal">
+      <div class="modal-box" style="max-width: 540px;">
+        <h2 style="margin-top: 0; color: var(--text-dark); font-size: 20px;">🛠️ Target Photo Compiler Tool</h2>
+        <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px; line-height: 1.5;">
+          Select any client target photograph (.jpg / .png) to compile into a <strong>.mind</strong> tracking file for WebAR photo recognition.
+        </p>
+
+        <div style="background: var(--bg-card-alt); border: 2px dashed var(--border-subtle); border-radius: 16px; padding: 28px; text-align: center; margin-bottom: 24px;">
+          <div style="font-size: 32px; margin-bottom: 10px;">📸</div>
+          <div style="font-weight: 700; font-size: 14px; margin-bottom: 6px; color: var(--text-dark);">Compile Target Photograph</div>
+          <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 16px;">Generates feature points (.mind) instantly in browser</div>
+          <a href="compile.html" target="_blank" class="btn-action btn-primary" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+            Open Interactive Target Compiler ↗
+          </a>
+        </div>
+
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+          <button class="btn-action btn-secondary" onclick="closeModals()">Close</button>
         </div>
       </div>
     </div>
