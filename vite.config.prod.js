@@ -1,4 +1,4 @@
-import {defineConfig, build} from 'vite'
+import { defineConfig, build } from 'vite';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
@@ -58,7 +58,6 @@ export default defineConfig(async ({ command, mode }) => {
     if (command === 'build') {
         await build(imageAframeConfig);
         const files = await fs.readdir(outDir);
-        // rename the aframe builds
         await Promise.all(files.map(async (filename) => {
             if (filename.includes(".iife.js")) {
                 const newName = filename.replace(".iife.js", ".js");
@@ -66,6 +65,16 @@ export default defineConfig(async ({ command, mode }) => {
                 await fs.rename(path.join(outDir, filename), path.join(outDir, newName));
             }
         }));
+
+        // Copy static site files into dist directory for Vercel deployment
+        try {
+            await fs.copyFile('index.html', path.join(outDir, 'index.html'));
+            await fs.cp('examples', path.join(outDir, 'examples'), { recursive: true });
+            await fs.cp('src', path.join(outDir, 'src'), { recursive: true });
+            console.log("✅ Copied index.html, examples, and src into dist for Vercel deployment");
+        } catch (err) {
+            console.error("Copy error:", err);
+        }
     }
     return moduleConfig;
 });

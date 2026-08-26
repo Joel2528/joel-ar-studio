@@ -12,7 +12,7 @@ const moduleConfig = {
         port: 8080,
         host: true,
         watch: {
-            ignored: ['**/uploads/**']
+            ignored: ['**/uploads/**', '**/dist/**']
         }
     },
     plugins: [],
