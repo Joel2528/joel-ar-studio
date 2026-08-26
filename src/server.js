@@ -5,12 +5,13 @@ import { URL } from 'url';
 
 const PORT = 3000;
 
-// Built-in Storage Engine Configuration (Self-Contained Media Server)
+// Supabase Cloud Storage Engine Configuration
 let storageConfig = {
-  engine: 'Local Express Storage',
-  storagePath: 'uploads/',
-  active: true,
-  bucketName: 'local-videos'
+  engine: 'Supabase Object Storage',
+  projectId: 'kbcfmvcaantevnywykso',
+  bucketName: 'ar-videos',
+  baseUrl: 'https://kbcfmvcaantevnywykso.supabase.co/storage/v1/object/public/ar-videos',
+  active: true
 };
 
 // In-Memory Database Store (Mirroring Relational Schema)
@@ -26,14 +27,17 @@ const db = {
     { id: 'F003', clientId: 'C002', name: 'Birthday Memory Frame', targetFile: 'frame003.mind', active: false, createdAt: new Date().toISOString() }
   ],
   videos: [
-    { id: 'V001', frameId: 'F001', storageKey: 'uploads/clients/C001/F001/video.mp4', filename: 'wedding_final.mp4', duration: 15, sizeMb: '4.2 MB' },
-    { id: 'V002', frameId: 'F002', storageKey: 'uploads/clients/C001/F002/video.mp4', filename: 'reception_recap.mp4', duration: 24, sizeMb: '8.7 MB' },
-    { id: 'V003', frameId: 'F003', storageKey: 'uploads/clients/C002/F003/video.mp4', filename: 'bday_highlights.mp4', duration: 18, sizeMb: '5.1 MB' }
+    { id: 'V001', frameId: 'F001', storageKey: 'clients/C001/F001/video.mp4', filename: 'wedding_final.mp4', duration: 15, sizeMb: '4.2 MB' },
+    { id: 'V002', frameId: 'F002', storageKey: 'clients/C001/F002/video.mp4', filename: 'reception_recap.mp4', duration: 24, sizeMb: '8.7 MB' },
+    { id: 'V003', frameId: 'F003', storageKey: 'clients/C002/F003/video.mp4', filename: 'bday_highlights.mp4', duration: 18, sizeMb: '5.1 MB' }
   ]
 };
 
-// Signed Token Generator for Local Stream Access
+// Signed & Direct Token Generator for Supabase Media Storage Access
 function generateSignedUrl(storageKey, expiresInSeconds = 3600) {
+  if (storageConfig.baseUrl && storageKey) {
+    return `${storageConfig.baseUrl}/${storageKey}`;
+  }
   const timestamp = Math.floor(Date.now() / 1000) + expiresInSeconds;
   const mockSignature = Buffer.from(`${storageKey}_${timestamp}`).toString('hex').slice(0, 16);
   return `./assets/frame001.mp4?sig=${mockSignature}&exp=${timestamp}`;
