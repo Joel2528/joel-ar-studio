@@ -147,7 +147,7 @@
         100% { top: 0; opacity: 0.8; }
       }
 
-      /* Bottom Status Banner */
+      /* Bottom Action Bar & Status */
       .bottom-status-box {
         position: absolute;
         bottom: calc(24px + env(safe-area-inset-bottom));
@@ -157,7 +157,7 @@
         background: rgba(15, 23, 42, 0.92);
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
-        padding: 12px 20px;
+        padding: 14px 20px;
         border-radius: 20px;
         border: 1px solid rgba(255, 255, 255, 0.15);
         color: #ffffff;
@@ -167,12 +167,34 @@
         box-shadow: 0 12px 32px rgba(0,0,0,0.5);
         font-size: 13px;
         font-weight: 500;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .btn-camera {
+        padding: 10px 24px;
+        background: var(--accent-blue);
+        color: #ffffff;
+        border: none;
+        border-radius: 24px;
+        font-weight: 700;
+        font-size: 13px;
+        cursor: pointer;
+        font-family: inherit;
+        box-shadow: 0 4px 18px rgba(37, 99, 235, 0.4);
+        transition: all 0.2s ease;
+        width: 100%;
+      }
+      .btn-camera:hover {
+        background: #1d4ed8;
       }
 
       /* PC Camera Simulator Bar */
       .pc-sim-tray {
         position: absolute;
-        bottom: calc(76px + env(safe-area-inset-bottom));
+        bottom: calc(90px + env(safe-area-inset-bottom));
         left: 50%;
         transform: translateX(-50%);
         z-index: 9999;
@@ -180,17 +202,15 @@
         gap: 10px;
       }
       .btn-sim {
-        padding: 8px 16px;
-        background: var(--accent-blue);
-        color: #ffffff;
-        border: none;
-        border-radius: 20px;
+        padding: 6px 14px;
+        background: rgba(255, 255, 255, 0.1);
+        color: #94a3b8;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 16px;
         font-weight: 600;
-        font-size: 12px;
+        font-size: 11px;
         cursor: pointer;
         font-family: inherit;
-        box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
-        transition: all 0.2s ease;
       }
 
       /* Audio Unmute Overlay Badge for iOS Safari */
@@ -216,25 +236,23 @@
         const arTarget = document.querySelector("#arTarget");
         const videoEl = document.querySelector("#arVideo");
         const statusText = document.querySelector("#status-text");
+        const startCamBtn = document.querySelector("#start-cam-btn");
         const pcSimBtn = document.querySelector("#pc-sim-btn");
         const audioBadge = document.querySelector("#audio-badge");
 
         const sceneEl = document.querySelector("a-scene");
         
-        const urlParams = new URLSearchParams(window.location.search);
-        const currentFrameId = urlParams.get('frame') || 'F001';
-        
-        async function fetchSignedVideoUrl(frameId = currentFrameId) {
+        async function fetchSignedVideoUrl(frameId = 'F001') {
           try {
-            const res = await fetch(`http://localhost:3000/api/frames/${frameId}/video`);
+            const apiHost = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://joel-ar-api.onrender.com';
+            const res = await fetch(`${apiHost}/api/frames/${frameId}/video`);
             const data = await res.json();
             if (data.success) {
               videoEl.src = data.signedUrl;
               return data.signedUrl;
             }
-            return null;
+            return "./assets/frame001.mp4";
           } catch (err) {
-            // Local fallback
             videoEl.src = "./assets/frame001.mp4";
             return "./assets/frame001.mp4";
           }
@@ -250,12 +268,35 @@
         window.addEventListener("click", enableAudioOnTouch);
         window.addEventListener("touchstart", enableAudioOnTouch);
 
+        // Start Camera Function
+        async function launchCamera() {
+          statusText.innerHTML = "Opening Camera Stream...";
+          try {
+            const arSystem = sceneEl.systems["mindar-image-system"];
+            await arSystem.start();
+            statusText.innerHTML = "Point camera at photograph target...";
+            startCamBtn.style.display = "none";
+          } catch (err) {
+            console.error("Camera access error:", err);
+            statusText.innerHTML = "Camera permission needed. Please allow camera or run PC simulation below.";
+          }
+        }
+
+        startCamBtn?.addEventListener("click", launchCamera);
+
+        // Auto-start attempt on page load
+        setTimeout(() => {
+          launchCamera().catch(() => {
+            statusText.innerHTML = "Tap 'Start Camera Scanner' below";
+          });
+        }, 300);
+
         // Target Found Event — HIDE ALL UI/INSTRUCTIONS for clean video view
         arTarget?.addEventListener("targetFound", async () => {
-          console.log(`MindAR Recognized Photo Target ${currentFrameId}!`);
+          console.log("MindAR Recognized Photo Target F001!");
           document.body.classList.add("target-recognized");
 
-          const signedUrl = await fetchSignedVideoUrl(currentFrameId);
+          const signedUrl = await fetchSignedVideoUrl('F001');
           if (signedUrl || videoEl.src) {
             videoEl.currentTime = 0;
             videoEl.play().then(() => {
@@ -274,20 +315,6 @@
           videoEl.pause();
           if (audioBadge) audioBadge.style.display = 'none';
         });
-
-        // Start MindAR Engine automatically if camera available (iOS Safari & Android supported)
-        try {
-          const arSystem = sceneEl.systems["mindar-image-system"];
-          if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-            arSystem.start().then(() => {
-              statusText.innerHTML = "Point camera at photograph target...";
-            }).catch(() => {
-              statusText.innerHTML = "PC Mode: Click below to run stream simulation";
-            });
-          }
-        } catch (e) {
-          console.log("Auto-start fallback");
-        }
 
         // PC Virtual Camera Stream Simulator (for PC testing without webcam)
         pcSimBtn?.addEventListener("click", async () => {
@@ -318,6 +345,7 @@
           await arSystem.start();
 
           pcSimBtn.innerText = "Stream Active";
+          startCamBtn.style.display = "none";
         });
       });
     </script>
@@ -349,16 +377,17 @@
 
       <!-- PC Simulation Button -->
       <div class="pc-sim-tray">
-        <button class="btn-sim" id="pc-sim-btn">Run PC Simulation Test</button>
+        <button class="btn-sim" id="pc-sim-btn">PC Test Simulation</button>
       </div>
 
-      <!-- Bottom Status Bar -->
+      <!-- Bottom Action & Status Bar -->
       <div class="bottom-status-box">
+        <button class="btn-camera" id="start-cam-btn">📷 Start Camera Scanner</button>
         <span id="status-text">Point camera at photograph target...</span>
       </div>
     </div>
 
-    <!-- Fullscreen AR Scene Viewport (iOS Safari & Android Optimized) -->
+    <!-- Fullscreen AR Scene Viewport -->
     <div class="example-container">
       <a-scene 
         mindar-image="imageTargetSrc: ./assets/frame001.mind; showStats: false; autoStart: false; uiLoading: no; uiError: no; uiScanning: no;" 
@@ -371,7 +400,7 @@
         <a-assets>
           <video 
             id="arVideo" 
-            src="" 
+            src="./assets/frame001.mp4" 
             preload="auto" 
             loop 
             crossorigin="anonymous" 
