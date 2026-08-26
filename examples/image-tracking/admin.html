@@ -410,33 +410,54 @@
       .status-pill {
         display: inline-flex;
         align-items: center;
-        padding: 4px 10px;
-        border-radius: 12px;
+        gap: 6px;
+        padding: 5px 12px;
+        border-radius: 20px;
         font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.3px;
+        font-weight: 800;
+        font-family: 'Space Grotesk', sans-serif;
+        letter-spacing: 0.6px;
+        white-space: nowrap;
+        text-transform: uppercase;
       }
 
       .status-active {
-        background: rgba(16, 185, 129, 0.15);
+        background: rgba(16, 185, 129, 0.12);
         color: #34d399;
         border: 1px solid rgba(16, 185, 129, 0.35);
-        box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+        box-shadow: 0 0 12px rgba(16, 185, 129, 0.25);
       }
 
-      .status-disabled {
-        background: rgba(244, 63, 94, 0.15);
+      .status-disabled, .status-inactive {
+        background: rgba(244, 63, 94, 0.12);
         color: #fb7185;
         border: 1px solid rgba(244, 63, 94, 0.35);
         box-shadow: 0 0 12px rgba(244, 63, 94, 0.2);
       }
 
-      /* Toggle Switch */
+      .badge-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        display: inline-block;
+      }
+
+      .dot-active {
+        background: #34d399;
+        box-shadow: 0 0 8px #34d399;
+      }
+
+      .dot-inactive {
+        background: #f43f5e;
+        box-shadow: 0 0 8px #f43f5e;
+      }
+
+      /* Executive Glow Toggle Switch */
       .switch {
         position: relative;
         display: inline-block;
-        width: 42px;
-        height: 22px;
+        width: 44px;
+        height: 24px;
       }
 
       .switch input { opacity: 0; width: 0; height: 0; }
@@ -445,29 +466,35 @@
         position: absolute;
         cursor: pointer;
         top: 0; left: 0; right: 0; bottom: 0;
-        background-color: #cbd5e1;
-        transition: .25s ease;
-        border-radius: 22px;
+        background-color: #1e293b;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        transition: .3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 24px;
       }
 
       .slider:before {
         position: absolute;
         content: "";
-        height: 16px;
-        width: 16px;
-        left: 3px;
-        bottom: 3px;
-        background-color: white;
-        transition: .25s ease;
+        height: 18px;
+        width: 18px;
+        left: 2px;
+        bottom: 2px;
+        background-color: #64748b;
+        transition: .3s cubic-bezier(0.4, 0, 0.2, 1);
         border-radius: 50%;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
       }
 
       input:checked + .slider {
-        background-color: var(--accent-blue);
+        background: linear-gradient(135deg, #00a3ff, #0284c7);
+        border-color: #38bdf8;
+        box-shadow: 0 0 14px rgba(0, 163, 255, 0.4);
       }
 
       input:checked + .slider:before {
         transform: translateX(20px);
+        background-color: #ffffff;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
       }
 
       /* AR Preview Viewport Drawer */
@@ -612,9 +639,22 @@
 
       function renderDashboard(data) {
         if (!data) return;
-        document.querySelector("#client-count").innerText = data.clientsCount || defaultDashboardData.data.length;
-        document.querySelector("#frame-count").innerText = data.framesCount || 3;
-        document.querySelector("#active-count").innerText = data.activeFramesCount || 2;
+        
+        // Recalculate total frame and active count
+        let totalFrames = 0;
+        let activeFrames = 0;
+        if (data.data) {
+          data.data.forEach(c => {
+            if (c.frames) {
+              totalFrames += c.frames.length;
+              c.frames.forEach(f => { if (f.active) activeFrames++; });
+            }
+          });
+        }
+
+        document.querySelector("#client-count").innerText = data.clientsCount || (data.data ? data.data.length : 3);
+        document.querySelector("#frame-count").innerText = totalFrames || 3;
+        document.querySelector("#active-count").innerText = activeFrames || 2;
         document.querySelector("#r2-name").innerText = data.supabaseConfig ? data.supabaseConfig.bucketName : 'ar-videos';
 
         const tableBody = document.querySelector("#clients-table-body");
@@ -630,8 +670,9 @@
                     <td><strong style="color: #38bdf8;">${frame.name}</strong> <br/><span style="color: #60a5fa; font-size: 11px; font-weight: 700;">${frame.id}</span></td>
                     <td style="font-family: monospace; color: #00f0ff; font-size: 12px; font-weight: 600;">${frame.video ? frame.video.storageKey : 'N/A'}</td>
                     <td>
-                      <span class="status-pill ${frame.active ? 'status-active' : 'status-disabled'}">
-                        ${frame.active ? '● ACTIVE' : '○ DISABLED'}
+                      <span class="status-pill ${frame.active ? 'status-active' : 'status-inactive'}">
+                        <span class="badge-dot ${frame.active ? 'dot-active' : 'dot-inactive'}"></span>
+                        ${frame.active ? 'ACTIVE' : 'INACTIVE'}
                       </span>
                     </td>
                     <td>
@@ -658,8 +699,26 @@
       }
 
       window.toggleFrame = async (frameId) => {
-        await fetch(`${apiHost}/api/admin/frames/${frameId}/toggle`, { method: 'POST' });
-        fetchDashboard();
+        // Toggle active status in local dataset instantly
+        defaultDashboardData.data.forEach(client => {
+          if (client.frames) {
+            client.frames.forEach(frame => {
+              if (frame.id === frameId) {
+                frame.active = !frame.active;
+              }
+            });
+          }
+        });
+
+        // Re-render UI immediately
+        renderDashboard(defaultDashboardData);
+
+        // Sync in background with API
+        try {
+          await fetch(`${apiHost}/api/admin/frames/${frameId}/toggle`, { method: 'POST' });
+        } catch(e) {
+          console.warn("Toggle background sync:", e);
+        }
       };
 
       window.openModal = (id) => document.querySelector(`#${id}`).style.display = 'flex';
