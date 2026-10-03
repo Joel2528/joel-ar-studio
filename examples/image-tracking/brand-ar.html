@@ -328,27 +328,25 @@
 
         // Target Found Event — Plays video instantly and reliably every time target is recognized
         arTarget?.addEventListener("targetFound", () => {
-          console.log("MindAR Recognized Photo Target F001!");
+          console.log("MindAR Recognized Photo Target!");
           document.body.classList.add("target-recognized");
 
-          if (!videoEl.src) {
-            videoEl.src = "https://kbcfmvcaantevnywykso.supabase.co/storage/v1/object/public/ar-videos/clients/C002/my_new_video.mp4.mp4";
+          videoEl.muted = true;
+          videoEl.currentTime = 0;
+          const playPromise = videoEl.play();
+          if (playPromise !== undefined) {
+            playPromise.then(() => {
+              if (audioBadge) {
+                audioBadge.style.display = 'block';
+                audioBadge.innerText = "Tap Screen for Sound 🔊";
+              }
+            }).catch(e => console.log("Play error:", e));
           }
-
-          if (videoEl.ended) {
-            videoEl.currentTime = 0;
-          }
-
-          videoEl.play().then(() => {
-            if (videoEl.muted && audioBadge) {
-              audioBadge.style.display = 'block';
-              audioBadge.innerText = "Tap Screen for Sound";
-            }
-          }).catch(e => console.log("Video play trigger:", e));
         });
 
         // Target Lost Event — Pauses video and restores UI, ready for next target scan
         arTarget?.addEventListener("targetLost", () => {
+          console.log("MindAR Target Lost");
           document.body.classList.remove("target-recognized");
           statusText.innerHTML = "Point camera at photograph target...";
           try {
@@ -404,7 +402,7 @@
         <a-assets>
           <video 
             id="arVideo" 
-            src="./assets/frame001.mp4" 
+            src="https://kbcfmvcaantevnywykso.supabase.co/storage/v1/object/public/ar-videos/clients/C002/my_new_video.mp4.mp4" 
             preload="auto" 
             loop 
             crossorigin="anonymous" 
