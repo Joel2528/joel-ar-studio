@@ -262,18 +262,20 @@
         }
 
         async function fetchSignedVideoUrl(frameId = 'F001') {
+          const defaultUrl = "https://kbcfmvcaantevnywykso.supabase.co/storage/v1/object/public/ar-videos/clients/C002/my_new_video.mp4.mp4";
           try {
             const apiHost = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://joel-ar-api.onrender.com';
             const res = await fetch(`${apiHost}/api/frames/${frameId}/video`);
             const data = await res.json();
-            if (data.success) {
+            if (data.success && data.signedUrl) {
               videoEl.src = data.signedUrl;
               return data.signedUrl;
             }
-            return "./assets/frame001.mp4";
+            videoEl.src = defaultUrl;
+            return defaultUrl;
           } catch (err) {
-            videoEl.src = "./assets/frame001.mp4";
-            return "./assets/frame001.mp4";
+            videoEl.src = defaultUrl;
+            return defaultUrl;
           }
         }
 

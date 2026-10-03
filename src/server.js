@@ -27,9 +27,9 @@ const db = {
     { id: 'F003', clientId: 'C002', name: 'Birthday Memory Frame', targetFile: 'frame003.mind', active: false, createdAt: new Date().toISOString() }
   ],
   videos: [
-    { id: 'V001', frameId: 'F001', storageKey: 'clients/C001/F001/video.mp4', filename: 'wedding_final.mp4', duration: 15, sizeMb: '4.2 MB' },
+    { id: 'V001', frameId: 'F001', storageKey: 'clients/C002/my_new_video.mp4.mp4', filename: 'my_new_video.mp4.mp4', duration: 15, sizeMb: '4.2 MB' },
     { id: 'V002', frameId: 'F002', storageKey: 'clients/C001/F002/video.mp4', filename: 'reception_recap.mp4', duration: 24, sizeMb: '8.7 MB' },
-    { id: 'V003', frameId: 'F003', storageKey: 'clients/C002/F003/video.mp4', filename: 'bday_highlights.mp4', duration: 18, sizeMb: '5.1 MB' }
+    { id: 'V003', frameId: 'F003', storageKey: 'clients/C002/my_new_video.mp4.mp4', filename: 'my_new_video.mp4.mp4', duration: 18, sizeMb: '5.1 MB' }
   ]
 };
 
