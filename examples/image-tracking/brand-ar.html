@@ -279,6 +279,9 @@
           }
         }
 
+        // Preload video source immediately on page load
+        fetchSignedVideoUrl('F001').catch(e => console.log("Video preload:", e));
+
         // Tap screen to unmute audio (iOS Safari Autoplay Policy Requirement)
         function enableAudioOnTouch() {
           if (videoEl) {
@@ -298,7 +301,6 @@
 
           statusText.innerHTML = "Opening Mobile Camera Stream...";
           try {
-            // Request native media stream directly
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
               await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
             }
@@ -324,28 +326,34 @@
           }, 300);
         }
 
-        // Target Found Event — HIDE ALL UI/INSTRUCTIONS for clean video view
-        arTarget?.addEventListener("targetFound", async () => {
+        // Target Found Event — Plays video instantly and reliably every time target is recognized
+        arTarget?.addEventListener("targetFound", () => {
           console.log("MindAR Recognized Photo Target F001!");
           document.body.classList.add("target-recognized");
 
-          const signedUrl = await fetchSignedVideoUrl('F001');
-          if (signedUrl || videoEl.src) {
-            videoEl.currentTime = 0;
-            videoEl.play().then(() => {
-              if (videoEl.muted && audioBadge) {
-                audioBadge.style.display = 'block';
-                audioBadge.innerText = "Tap Screen for Sound";
-              }
-            }).catch(e => console.log("Autoplay error:", e));
+          if (!videoEl.src) {
+            videoEl.src = "https://kbcfmvcaantevnywykso.supabase.co/storage/v1/object/public/ar-videos/clients/C002/my_new_video.mp4.mp4";
           }
+
+          if (videoEl.ended) {
+            videoEl.currentTime = 0;
+          }
+
+          videoEl.play().then(() => {
+            if (videoEl.muted && audioBadge) {
+              audioBadge.style.display = 'block';
+              audioBadge.innerText = "Tap Screen for Sound";
+            }
+          }).catch(e => console.log("Video play trigger:", e));
         });
 
-        // Target Lost Event — RESTORE UI/INSTRUCTIONS to guide user
+        // Target Lost Event — Pauses video and restores UI, ready for next target scan
         arTarget?.addEventListener("targetLost", () => {
           document.body.classList.remove("target-recognized");
           statusText.innerHTML = "Point camera at photograph target...";
-          videoEl.pause();
+          try {
+            videoEl.pause();
+          } catch(e) {}
           if (audioBadge) audioBadge.style.display = 'none';
         });
       });
